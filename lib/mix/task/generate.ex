@@ -38,10 +38,18 @@ defmodule Mix.Tasks.Static.Generate do
              content_path
            ]),
          {:ok, raw_content_tree} <- Jason.decode(raw_tree) do
-      raw_content_tree
-      |> get_sites(content_path)
-      |> Static.Helper.nested_set(1)
+      sites =
+        raw_content_tree
+        |> get_sites(content_path)
+
+      nested_set = sites |> Static.NestedSet.flattened_set()
+
+      sites
+      |> set_breadcrumb(nested_set)
       |> IO.inspect()
+
+      # |> Static.NestedSet.breadcrumb("/tmp/content/02-draft-environment/04-packages/18-feh.md")
+      # |> IO.inspect()
     end
   end
 
@@ -99,5 +107,21 @@ defmodule Mix.Tasks.Static.Generate do
       sites
       |> Enum.map(fn site -> get_sites(site, content_path) end)
     )
+  end
+
+  defp set_breadcrumb(%Folder{sites: sites} = folder, nested_set) do
+    found_sites =
+      sites
+      |> Enum.filter(fn x -> Kernel.is_struct(x, Site) end)
+      |> Enum.map(fn site ->
+        %Site{site | breadcrumb: Static.NestedSet.breadcrumb(nested_set, site)}
+      end)
+
+    found_folders =
+      sites
+      |> Enum.filter(fn x -> Kernel.is_struct(x, Folder) end)
+      |> Enum.map(fn found_folder -> set_breadcrumb(found_folder, nested_set) end)
+
+    %Folder{folder | sites: found_sites ++ found_folders}
   end
 end

@@ -7,6 +7,7 @@ defmodule Static.Site do
 
   @type t :: %Site{
           base_path: String.t(),
+          breadcrumb: [Site.t()],
           content_filename: String.t(),
           relative_content_filename: String.t(),
           raw_content: String.t(),
@@ -15,6 +16,7 @@ defmodule Static.Site do
         }
 
   defstruct base_path: nil,
+            breadcrumb: [],
             raw_content: nil,
             relative_content_filename: nil,
             content_filename: nil,
