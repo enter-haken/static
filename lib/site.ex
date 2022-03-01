@@ -9,13 +9,17 @@ defmodule Static.Site do
           base_path: String.t(),
           content_filename: String.t(),
           relative_content_filename: String.t(),
-          raw_content: String.t()
+          raw_content: String.t(),
+          lnum: pos_integer(),
+          rnum: pos_integer()
         }
 
   defstruct base_path: nil,
             raw_content: nil,
             relative_content_filename: nil,
-            content_filename: nil
+            content_filename: nil,
+            lnum: nil,
+            rnum: nil
 
   def create(file_name, base_path) do
     %Site{

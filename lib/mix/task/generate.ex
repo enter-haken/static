@@ -6,6 +6,9 @@ defmodule Mix.Tasks.Static.Generate do
     generates a static site
   """
 
+  @tree_result_as_json_with_full_path "-Jf"
+  @no_report_at_the_end_of_tree_result "--noreport"
+
   use Mix.Task
   alias __MODULE__
 
@@ -29,10 +32,15 @@ defmodule Mix.Tasks.Static.Generate do
       |> create!()
 
     with {raw_tree, 0} <-
-           System.cmd("tree", ["-Jf", "--noreport", content_path]),
+           System.cmd("tree", [
+             @tree_result_as_json_with_full_path,
+             @no_report_at_the_end_of_tree_result,
+             content_path
+           ]),
          {:ok, raw_content_tree} <- Jason.decode(raw_tree) do
       raw_content_tree
       |> get_sites(content_path)
+      |> Static.Helper.nested_set(1)
       |> IO.inspect()
     end
   end
