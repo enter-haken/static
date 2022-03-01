@@ -6,22 +6,16 @@ defmodule Static.Site do
   @derive Jason.Encoder
 
   @type t :: %Site{
-          sites: [Site.t()],
           base_path: String.t(),
           content_filename: String.t(),
           relative_content_filename: String.t(),
-          raw_content: String.t(),
-          is_root: boolean
+          raw_content: String.t()
         }
 
-  defstruct sites: [],
-            base_path: nil,
+  defstruct base_path: nil,
             raw_content: nil,
             relative_content_filename: nil,
-            content_filename: nil,
-            is_root: false
-
-  def create_root(sites), do: %Site{is_root: true, sites: sites}
+            content_filename: nil
 
   def create(file_name, base_path) do
     %Site{

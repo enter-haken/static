@@ -10,6 +10,7 @@ defmodule Mix.Tasks.Static.Generate do
   alias __MODULE__
 
   alias Static.Site
+  alias Static.Folder
 
   @switches [
     content_path: :string,
@@ -36,6 +37,7 @@ defmodule Mix.Tasks.Static.Generate do
     end
   end
 
+  # TODO: sane error messages for the user
   defp create!(args) do
     case args
          |> OptionParser.parse!(strict: @switches) do
@@ -68,19 +70,26 @@ defmodule Mix.Tasks.Static.Generate do
   end
 
   defp get_sites(
-         %{"type" => "directory", "contents" => sites} = _raw_content_tree,
+         %{"type" => "directory", "contents" => sites, "name" => name} = _raw_content_tree,
          content_path
        ) do
-    sites
-    |> Enum.map(fn site -> get_sites(site, content_path) end)
+    Folder.create(
+      name,
+      content_path,
+      sites
+      |> Enum.map(fn site -> get_sites(site, content_path) end)
+    )
   end
 
   defp get_sites(
-         [%{"type" => "directory", "contents" => sites}] = _raw_content_tree,
+         [%{"type" => "directory", "contents" => sites, "name" => name}] = _raw_content_tree,
          content_path
        ) do
-    sites
-    |> Enum.map(fn site -> get_sites(site, content_path) end)
-    |> Site.create_root()
+    Folder.create(
+      name,
+      content_path,
+      sites
+      |> Enum.map(fn site -> get_sites(site, content_path) end)
+    )
   end
 end
