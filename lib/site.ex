@@ -13,6 +13,12 @@ defmodule Static.Site do
               title: String.t()
             }
           ],
+          siblings: [
+            %{
+              href: String.t(),
+              title: String.t()
+            }
+          ],
           content_filename: String.t(),
           relative_content_filename: String.t(),
           url: String.t(),
@@ -22,7 +28,13 @@ defmodule Static.Site do
         }
 
   defstruct base_path: nil,
+            # TODO: works only with fully populated site
             breadcrumb: [],
+
+            # TODO: works only with fully populated site
+            # TODO: reference to folder?
+            # TODO: sibling functions in folder module 
+            siblings: [],
             raw_content: nil,
             relative_content_filename: nil,
             content_filename: nil,
@@ -31,11 +43,14 @@ defmodule Static.Site do
             rnum: nil
 
   def create(file_name, base_path) do
+    # TODO: title comes from the markdown content
     %Site{
       base_path: base_path,
       content_filename: file_name,
       relative_content_filename: file_name |> Path.relative_to(base_path)
     }
+
+    # TODO: works only with fully populated site
     |> set_url()
   end
 

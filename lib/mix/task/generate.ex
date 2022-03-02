@@ -13,6 +13,7 @@ defmodule Mix.Tasks.Static.Generate do
 
   alias Static.Site
   alias Static.Folder
+  alias Static.NestedSet
 
   defstruct content_path: nil,
             output_path: nil
@@ -22,7 +23,6 @@ defmodule Mix.Tasks.Static.Generate do
     %Static.Parameter{
       content_path: content_path
     } = Static.Parameter.get_params(args)
-        |> IO.inspect()
 
     with {raw_tree, 0} <-
            System.cmd("tree", [
@@ -31,13 +31,16 @@ defmodule Mix.Tasks.Static.Generate do
              content_path
            ]),
          {:ok, raw_content_tree} <- Jason.decode(raw_tree) do
-      sites =
-        raw_content_tree
-        |> get_sites(content_path)
-        |> Static.NestedSet.get_set()
-
-      sites
-      |> set_breadcrumb(sites |> Static.NestedSet.flattened_set())
+      raw_content_tree
+      |> read_directory(content_path)
+      |> NestedSet.populate_lnum_rnum()
+      # TODO: read file content
+      # TODO: parse markdown
+      |> Folder.populate_breadcrumb()
+      # TODO: poupulate siblings
+      # TODO: generate HTML
+      # TODO: save content to filesystem
+      # TODO: copy static content
       |> IO.inspect()
     end
   end
@@ -61,36 +64,15 @@ defmodule Mix.Tasks.Static.Generate do
     )
   end
 
-  defp get_sites(
-         [%{"type" => "directory", "contents" => sites, "name" => name}] = _raw_content_tree,
+  defp read_directory(
+         [%{"type" => "directory", "contents" => raw_sites, "name" => name}] = _raw_content_tree,
          content_path
        ) do
     Folder.create(
       name,
       content_path,
-      sites
+      raw_sites
       |> Enum.map(fn site -> get_sites(site, content_path) end)
     )
-  end
-
-  defp set_breadcrumb(%Folder{sites: sites} = folder, nested_set) do
-    found_sites =
-      sites
-      |> Enum.filter(fn x -> Kernel.is_struct(x, Site) end)
-      |> Enum.map(fn site ->
-        %Site{
-          site
-          | breadcrumb:
-              Static.NestedSet.breadcrumb(nested_set, site)
-              |> Enum.map(fn %Site{url: url} -> %{url: url, title: nil} end)
-        }
-      end)
-
-    found_folders =
-      sites
-      |> Enum.filter(fn x -> Kernel.is_struct(x, Folder) end)
-      |> Enum.map(fn found_folder -> set_breadcrumb(found_folder, nested_set) end)
-
-    %Folder{folder | sites: found_sites ++ found_folders}
   end
 end

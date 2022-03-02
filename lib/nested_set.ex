@@ -2,23 +2,23 @@ defmodule Static.NestedSet do
   alias Static.Folder
   alias Static.Site
 
-  def get_set(folder, lnum \\ 1)
+  def populate_lnum_rnum(folder, lnum \\ 1)
 
-  def get_set(%Site{} = site, lnum) do
+  def populate_lnum_rnum(%Site{} = site, lnum) do
     %Site{site | lnum: lnum, rnum: lnum + 1}
   end
 
-  def get_set(%Folder{sites: sites} = folder, lnum) do
+  def populate_lnum_rnum(%Folder{sites: sites} = folder, lnum) do
     %{last: %{rnum: last_rnum}, values: updated_sites} =
       sites
       |> Enum.reduce(%{last: nil, values: []}, fn e, %{last: last} = acc ->
         next =
           case last do
             nil ->
-              get_set(e, lnum + 1)
+              populate_lnum_rnum(e, lnum + 1)
 
             %{rnum: last_rnum} ->
-              get_set(e, last_rnum + 1)
+              populate_lnum_rnum(e, last_rnum + 1)
           end
 
         %{last: next, values: acc.values ++ [next]}
@@ -43,8 +43,8 @@ defmodule Static.NestedSet do
     |> Enum.sort_by(fn %Site{lnum: lnum} -> lnum end)
   end
 
-  def flattened_set(folder, lnum \\ 1) do
-    get_set(folder, lnum)
+  def flattened_tree(folder, lnum \\ 1) do
+    populate_lnum_rnum(folder, lnum)
     |> flatten()
   end
 
