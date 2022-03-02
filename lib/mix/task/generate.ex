@@ -32,7 +32,7 @@ defmodule Mix.Tasks.Static.Generate do
            ]),
          {:ok, raw_content_tree} <- Jason.decode(raw_tree) do
       raw_content_tree
-      |> read_directory(content_path)
+      |> read_root(content_path)
       |> NestedSet.populate_lnum_rnum()
       # TODO: read file content
       # TODO: parse markdown
@@ -64,7 +64,7 @@ defmodule Mix.Tasks.Static.Generate do
     )
   end
 
-  defp read_directory(
+  defp read_root(
          [%{"type" => "directory", "contents" => raw_sites, "name" => name}] = _raw_content_tree,
          content_path
        ) do
