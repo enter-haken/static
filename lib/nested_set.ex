@@ -2,6 +2,8 @@ defmodule Static.NestedSet do
   alias Static.Folder
   alias Static.Site
 
+  def get_set(folder, lnum \\ 1)
+
   def get_set(%Site{} = site, lnum) do
     %Site{site | lnum: lnum, rnum: lnum + 1}
   end

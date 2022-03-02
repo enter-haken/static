@@ -7,9 +7,15 @@ defmodule Static.Site do
 
   @type t :: %Site{
           base_path: String.t(),
-          breadcrumb: [Site.t()],
+          breadcrumb: [
+            %{
+              href: String.t(),
+              title: String.t()
+            }
+          ],
           content_filename: String.t(),
           relative_content_filename: String.t(),
+          url: String.t(),
           raw_content: String.t(),
           lnum: pos_integer(),
           rnum: pos_integer()
@@ -20,6 +26,7 @@ defmodule Static.Site do
             raw_content: nil,
             relative_content_filename: nil,
             content_filename: nil,
+            url: nil,
             lnum: nil,
             rnum: nil
 
@@ -29,6 +36,7 @@ defmodule Static.Site do
       content_filename: file_name,
       relative_content_filename: file_name |> Path.relative_to(base_path)
     }
+    |> set_url()
   end
 
   def process(site) do
@@ -41,6 +49,17 @@ defmodule Static.Site do
       {:error, :eread} ->
         {:error, :eread}
     end
+  end
+
+  defp set_url(%Site{relative_content_filename: relative_content_filename} = site) do
+    %Site{
+      site
+      | url:
+          relative_content_filename
+          |> String.replace(~r/\/\d{1,2}-/, "/")
+          |> String.replace(~r/^\d{1,2}-/, "")
+          |> String.replace(~r/\.md$/, ".html")
+    }
   end
 
   defp read(%Site{content_filename: content_filename} = site) do

@@ -10,26 +10,19 @@ defmodule Mix.Tasks.Static.Generate do
   @no_report_at_the_end_of_tree_result "--noreport"
 
   use Mix.Task
-  alias __MODULE__
 
   alias Static.Site
   alias Static.Folder
-
-  @switches [
-    content_path: :string,
-    output_path: :string
-  ]
 
   defstruct content_path: nil,
             output_path: nil
 
   @impl Mix.Task
   def run(args) do
-    %Generate{
+    %Static.Parameter{
       content_path: content_path
-    } =
-      args
-      |> create!()
+    } = Static.Parameter.get_params(args)
+        |> IO.inspect()
 
     with {raw_tree, 0} <-
            System.cmd("tree", [
@@ -41,40 +34,11 @@ defmodule Mix.Tasks.Static.Generate do
       sites =
         raw_content_tree
         |> get_sites(content_path)
-
-      nested_set = sites |> Static.NestedSet.flattened_set()
+        |> Static.NestedSet.get_set()
 
       sites
-      |> set_breadcrumb(nested_set)
+      |> set_breadcrumb(sites |> Static.NestedSet.flattened_set())
       |> IO.inspect()
-
-      # |> Static.NestedSet.breadcrumb("/tmp/content/02-draft-environment/04-packages/18-feh.md")
-      # |> IO.inspect()
-    end
-  end
-
-  # TODO: sane error messages for the user
-  defp create!(args) do
-    case args
-         |> OptionParser.parse!(strict: @switches) do
-      {parsed_options, [] = _no_rest} ->
-        %Generate{
-          content_path:
-            if Keyword.has_key?(parsed_options, :content_path) do
-              Keyword.get(parsed_options, :content_path)
-            else
-              raise "content path not found"
-            end,
-          output_path:
-            if Keyword.has_key?(parsed_options, :output_path) do
-              Keyword.get(parsed_options, :output_path)
-            else
-              raise "output path not found"
-            end
-        }
-
-      unknown ->
-        raise "could not parse options. #{inspect(unknown)}"
     end
   end
 
@@ -114,7 +78,12 @@ defmodule Mix.Tasks.Static.Generate do
       sites
       |> Enum.filter(fn x -> Kernel.is_struct(x, Site) end)
       |> Enum.map(fn site ->
-        %Site{site | breadcrumb: Static.NestedSet.breadcrumb(nested_set, site)}
+        %Site{
+          site
+          | breadcrumb:
+              Static.NestedSet.breadcrumb(nested_set, site)
+              |> Enum.map(fn %Site{url: url} -> %{url: url, title: nil} end)
+        }
       end)
 
     found_folders =

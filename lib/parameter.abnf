@@ -1,0 +1,10 @@
+params            = action *(*space action)
+action            = content-path / output-path 
+word              = (ALPHA / DIGIT / "/") *(ALPHA / DIGIT / "-" / "_" / "." / ":" / "/")
+term              = (dquote word *(*space word) dquote / word)
+content-path-cmd  = ("--content-path" / "-p")
+content-path      = content-path-cmd *space term
+output-path-cmd   = ("--output-path" / "-o")
+output-path       = output-path-cmd *space term
+space             = " "
+dquote            = DQUOTE
