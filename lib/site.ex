@@ -22,7 +22,9 @@ defmodule Static.Site do
           content_filename: String.t(),
           relative_content_filename: String.t(),
           url: String.t(),
-          raw_content: String.t(),
+          raw_markdown: String.t(),
+          ast: term(),
+          html: String.t(),
           lnum: pos_integer(),
           rnum: pos_integer()
         }
@@ -32,10 +34,11 @@ defmodule Static.Site do
             breadcrumb: [],
 
             # TODO: works only with fully populated site
-            # TODO: reference to folder?
-            # TODO: sibling functions in folder module 
+            # TODO: sibling functions in folder module?
             siblings: [],
-            raw_content: nil,
+            raw_markdown: nil,
+            ast: nil,
+            html: nil,
             relative_content_filename: nil,
             content_filename: nil,
             url: nil,
@@ -43,15 +46,24 @@ defmodule Static.Site do
             rnum: nil
 
   def create(file_name, base_path) do
-    # TODO: title comes from the markdown content
     %Site{
       base_path: base_path,
       content_filename: file_name,
       relative_content_filename: file_name |> Path.relative_to(base_path)
     }
 
-    # TODO: works only with fully populated site
+    # TODO: depends on parsed markdown content (for title)
     |> set_url()
+    |> read()
+    |> case do
+      {:ok, site} ->
+        site
+
+      _ ->
+        %Site{}
+    end
+    |> ast()
+    |> parse()
   end
 
   def process(site) do
@@ -80,11 +92,40 @@ defmodule Static.Site do
   defp read(%Site{content_filename: content_filename} = site) do
     case File.read(content_filename) do
       {:ok, content} ->
-        {:ok, %Site{site | raw_content: content}}
+        {:ok, %Site{site | raw_markdown: content}}
 
       err ->
         Logger.error("could not read file #{content_filename}. #{inspect(err)}")
         {:error, :eread}
     end
+  end
+
+  defp ast(%Site{raw_markdown: nil} = site), do: site
+
+  defp ast(%Site{raw_markdown: raw_markdown} = site) do
+    %Site{
+      site
+      | ast:
+          raw_markdown
+          |> EarmarkParser.as_ast()
+          |> case do
+            {:ok, ast, _} ->
+              ast
+
+            _ ->
+              Logger.warn("could not parse markdown")
+
+              nil
+          end
+    }
+  end
+
+  defp parse(%Site{ast: nil} = site), do: site
+
+  defp parse(%Site{ast: ast} = site) do
+    %Site{
+      site
+      | html: Earmark.Transform.transform(ast)
+    }
   end
 end

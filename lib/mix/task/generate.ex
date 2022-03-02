@@ -15,9 +15,6 @@ defmodule Mix.Tasks.Static.Generate do
   alias Static.Folder
   alias Static.NestedSet
 
-  defstruct content_path: nil,
-            output_path: nil
-
   @impl Mix.Task
   def run(args) do
     %Static.Parameter{
@@ -34,11 +31,13 @@ defmodule Mix.Tasks.Static.Generate do
       raw_content_tree
       |> read_root(content_path)
       |> NestedSet.populate_lnum_rnum()
-      # TODO: read file content
-      # TODO: parse markdown
       |> Folder.populate_breadcrumb()
       # TODO: poupulate siblings
-      # TODO: generate HTML
+      # ----------------------------------
+      # when site is conpletely populated:
+      # ----------------------------------
+      # TODO: parse markdown
+      # TODO: generate HTML ->  create default template -> Tailwind
       # TODO: save content to filesystem
       # TODO: copy static content
       |> IO.inspect()
