@@ -24,7 +24,10 @@ defmodule Static.Site do
           url: String.t(),
           raw_markdown: String.t(),
           ast: term(),
+          body: String.t(),
           html: String.t(),
+          output_path: String.t(),
+          target_file: String.t(),
           lnum: pos_integer(),
           rnum: pos_integer()
         }
@@ -38,44 +41,32 @@ defmodule Static.Site do
             siblings: [],
             raw_markdown: nil,
             ast: nil,
+            body: nil,
             html: nil,
+            output_path: nil,
+            target_file: nil,
             relative_content_filename: nil,
             content_filename: nil,
             url: nil,
             lnum: nil,
             rnum: nil
 
-  def create(file_name, base_path) do
+  def create(file_name, base_path, output_path) do
     %Site{
       base_path: base_path,
+      output_path: output_path,
       content_filename: file_name,
       relative_content_filename: file_name |> Path.relative_to(base_path)
     }
 
     # TODO: depends on parsed markdown content (for title)
     |> set_url()
+    |> set_target_file()
     |> read()
-    |> case do
-      {:ok, site} ->
-        site
-
-      _ ->
-        %Site{}
-    end
     |> ast()
     |> parse()
-  end
-
-  def process(site) do
-    site
-    |> read
-    |> case do
-      {:ok, content} ->
-        content
-
-      {:error, :eread} ->
-        {:error, :eread}
-    end
+    |> envelop()
+    |> write()
   end
 
   defp set_url(%Site{relative_content_filename: relative_content_filename} = site) do
@@ -89,14 +80,21 @@ defmodule Static.Site do
     }
   end
 
+  defp set_target_file(%Site{url: url, output_path: output_path} = site) do
+    %Site{
+      site
+      | target_file: Path.join([output_path, url])
+    }
+  end
+
   defp read(%Site{content_filename: content_filename} = site) do
     case File.read(content_filename) do
       {:ok, content} ->
-        {:ok, %Site{site | raw_markdown: content}}
+        %Site{site | raw_markdown: content}
 
       err ->
-        Logger.error("could not read file #{content_filename}. #{inspect(err)}")
-        {:error, :eread}
+        Logger.warn("could not read file #{content_filename}. #{inspect(err)}")
+        site
     end
   end
 
@@ -109,7 +107,7 @@ defmodule Static.Site do
           raw_markdown
           |> EarmarkParser.as_ast()
           |> case do
-            {:ok, ast, _} ->
+            {:ok, ast, _deprecation_messages} ->
               ast
 
             _ ->
@@ -125,7 +123,25 @@ defmodule Static.Site do
   defp parse(%Site{ast: ast} = site) do
     %Site{
       site
-      | html: Earmark.Transform.transform(ast)
+      | body: Earmark.Transform.transform(ast)
     }
+  end
+
+  defp envelop(%Site{body: body, relative_content_filename: relative_content_filename} = site) do
+    %Site{
+      site
+      | html:
+          EEx.eval_file("lib/template/default.eex", body: body, title: relative_content_filename)
+    }
+  end
+
+  defp write(%Site{target_file: target_file, html: html} = site) do
+    with :ok <- target_file |> Path.dirname() |> File.mkdir_p(),
+         :ok <- target_file |> File.write(html) do
+      site
+    else
+      err ->
+        Logger.error("could not write #{target_file}. #{inspect(err)}")
+    end
   end
 end

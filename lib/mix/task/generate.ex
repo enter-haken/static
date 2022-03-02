@@ -18,8 +18,13 @@ defmodule Mix.Tasks.Static.Generate do
   @impl Mix.Task
   def run(args) do
     %Static.Parameter{
-      content_path: content_path
+      content_path: content_path,
+      output_path: output_path
     } = Static.Parameter.get_params(args)
+
+    if not File.dir?(output_path) do
+      File.mkdir_p(output_path)
+    end
 
     with {raw_tree, 0} <-
            System.cmd("tree", [
@@ -29,7 +34,7 @@ defmodule Mix.Tasks.Static.Generate do
            ]),
          {:ok, raw_content_tree} <- Jason.decode(raw_tree) do
       raw_content_tree
-      |> read_root(content_path)
+      |> read_root(content_path, output_path)
       |> NestedSet.populate_lnum_rnum()
       |> Folder.populate_breadcrumb()
       # TODO: poupulate siblings
@@ -37,41 +42,43 @@ defmodule Mix.Tasks.Static.Generate do
       # when site is conpletely populated:
       # ----------------------------------
       # TODO: parse markdown
-      # TODO: generate HTML ->  create default template -> Tailwind
-      # TODO: save content to filesystem
+      # TODO: create default template -> Tailwind?
+      # TODO: how to use custom templates?
       # TODO: copy static content
-      |> IO.inspect()
     end
   end
 
   defp get_sites(
          %{"name" => file_name, "type" => "file"} = _raw_content_tree,
-         content_path
+         content_path,
+         output_path
        ) do
-    Site.create(file_name, content_path)
+    Site.create(file_name, content_path, output_path)
   end
 
   defp get_sites(
          %{"type" => "directory", "contents" => sites, "name" => name} = _raw_content_tree,
-         content_path
+         content_path,
+         output_path
        ) do
     Folder.create(
       name,
       content_path,
       sites
-      |> Enum.map(fn site -> get_sites(site, content_path) end)
+      |> Enum.map(fn site -> get_sites(site, content_path, output_path) end)
     )
   end
 
   defp read_root(
          [%{"type" => "directory", "contents" => raw_sites, "name" => name}] = _raw_content_tree,
-         content_path
+         content_path,
+         output_path
        ) do
     Folder.create(
       name,
       content_path,
       raw_sites
-      |> Enum.map(fn site -> get_sites(site, content_path) end)
+      |> Enum.map(fn site -> get_sites(site, content_path, output_path) end)
     )
   end
 end

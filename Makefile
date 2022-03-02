@@ -1,9 +1,12 @@
-.PHONY: build default loc
+.PHONY: build default loc serve
 
 default: build
 
 build:
-	mix static.generate --content-path /tmp/content --output-path xxx
+	mix static.generate --content-path /tmp/content --output-path /tmp/output
+
+serve:
+	python -m http.server --directory /tmp/output
 
 loc:
 	for code in $$(find ./lib -type f); do cat $$code; done | grep "\S" | wc -l
