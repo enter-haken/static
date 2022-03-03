@@ -2,30 +2,26 @@ defmodule Static.Folder do
   alias __MODULE__
 
   alias Static.Site
+  alias Static.Parameter
   alias Static.NestedSet
 
   @derive Jason.Encoder
 
   @type t :: %Folder{
           sites: [Site.t() | Folder.t()],
-          base_path: String.t(),
-          content_folder: String.t(),
-          relative_content_folder: String.t(),
+          parameter: Parameter.t(),
           lnum: pos_integer(),
           rnum: pos_integer()
         }
 
   defstruct sites: [],
-            base_path: nil,
-            content_folder: nil,
-            relative_content_folder: nil,
+            parameter: nil,
             lnum: nil,
             rnum: nil
 
-  def create(content_folder, base_path, sites) do
+  def create(parameter, sites) do
     %Folder{
-      content_folder: content_folder,
-      base_path: base_path,
+      parameter: parameter,
       sites: sites
     }
   end

@@ -2,11 +2,12 @@ defmodule Static.Site do
   require Logger
 
   alias __MODULE__
+  alias Static.Parameter
 
   @derive Jason.Encoder
 
   @type t :: %Site{
-          base_path: String.t(),
+          parameter: Parameter.t(),
           breadcrumb: [
             %{
               href: String.t(),
@@ -26,13 +27,12 @@ defmodule Static.Site do
           ast: term(),
           body: String.t(),
           html: String.t(),
-          output_path: String.t(),
           target_file: String.t(),
           lnum: pos_integer(),
           rnum: pos_integer()
         }
 
-  defstruct base_path: nil,
+  defstruct parameter: nil,
             # TODO: works only with fully populated site
             breadcrumb: [],
 
@@ -43,7 +43,6 @@ defmodule Static.Site do
             ast: nil,
             body: nil,
             html: nil,
-            output_path: nil,
             target_file: nil,
             relative_content_filename: nil,
             content_filename: nil,
@@ -51,12 +50,11 @@ defmodule Static.Site do
             lnum: nil,
             rnum: nil
 
-  def create(file_name, base_path, output_path) do
+  def create(file_name, %Parameter{content_path: content_path} = parameter) do
     %Site{
-      base_path: base_path,
-      output_path: output_path,
+      parameter: parameter,
       content_filename: file_name,
-      relative_content_filename: file_name |> Path.relative_to(base_path)
+      relative_content_filename: file_name |> Path.relative_to(content_path)
     }
 
     # TODO: depends on parsed markdown content (for title)
@@ -80,7 +78,12 @@ defmodule Static.Site do
     }
   end
 
-  defp set_target_file(%Site{url: url, output_path: output_path} = site) do
+  defp set_target_file(
+         %Site{
+           url: url,
+           parameter: %Parameter{output_path: output_path}
+         } = site
+       ) do
     %Site{
       site
       | target_file: Path.join([output_path, url])

@@ -20,7 +20,7 @@ defmodule Mix.Tasks.Static.Generate do
     %Static.Parameter{
       content_path: content_path,
       output_path: output_path
-    } = Static.Parameter.get_params(args)
+    } = params = Static.Parameter.get_params(args)
 
     if not File.dir?(output_path) do
       File.mkdir_p(output_path)
@@ -34,9 +34,10 @@ defmodule Mix.Tasks.Static.Generate do
            ]),
          {:ok, raw_content_tree} <- Jason.decode(raw_tree) do
       raw_content_tree
-      |> read_root(content_path, output_path)
+      |> read_root(params)
       |> NestedSet.populate_lnum_rnum()
       |> Folder.populate_breadcrumb()
+
       # TODO: poupulate siblings
       # ----------------------------------
       # when site is conpletely populated:
@@ -50,35 +51,30 @@ defmodule Mix.Tasks.Static.Generate do
 
   defp get_sites(
          %{"name" => file_name, "type" => "file"} = _raw_content_tree,
-         content_path,
-         output_path
+         parameter
        ) do
-    Site.create(file_name, content_path, output_path)
+    Site.create(file_name, parameter)
   end
 
   defp get_sites(
-         %{"type" => "directory", "contents" => sites, "name" => name} = _raw_content_tree,
-         content_path,
-         output_path
+         %{"type" => "directory", "contents" => sites} = _raw_content_tree,
+         parameter
        ) do
     Folder.create(
-      name,
-      content_path,
+      parameter,
       sites
-      |> Enum.map(fn site -> get_sites(site, content_path, output_path) end)
+      |> Enum.map(fn site -> get_sites(site, parameter) end)
     )
   end
 
   defp read_root(
-         [%{"type" => "directory", "contents" => raw_sites, "name" => name}] = _raw_content_tree,
-         content_path,
-         output_path
+         [%{"type" => "directory", "contents" => raw_sites}] = _raw_content_tree,
+         parameter
        ) do
     Folder.create(
-      name,
-      content_path,
+      parameter,
       raw_sites
-      |> Enum.map(fn site -> get_sites(site, content_path, output_path) end)
+      |> Enum.map(fn site -> get_sites(site, parameter) end)
     )
   end
 end

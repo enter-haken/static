@@ -1,6 +1,8 @@
-.PHONY: build default loc serve
+.PHONY: build default loc serve all
 
-default: build
+default: all 
+
+all: build serve
 
 build:
 	mix static.generate --content-path /tmp/content --output-path /tmp/output
