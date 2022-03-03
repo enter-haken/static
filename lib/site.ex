@@ -47,7 +47,6 @@ defmodule Static.Site do
       content_filename: file_name,
       relative_content_filename: file_name |> Path.relative_to(content_path)
     }
-
     |> set_url()
     |> set_target_file()
     |> read()
@@ -65,10 +64,7 @@ defmodule Static.Site do
     %Site{
       site
       | url:
-          relative_content_filename
-          |> String.replace(~r/\/\d{1,2}-/, "/")
-          |> String.replace(~r/^\d{1,2}-/, "")
-          |> String.replace(~r/\.md$/, ".html")
+          "/#{relative_content_filename |> String.replace(~r/\/\d{1,2}-/, "/") |> String.replace(~r/^\d{1,2}-/, "") |> String.replace(~r/\.md$/, ".html")}"
     }
   end
 

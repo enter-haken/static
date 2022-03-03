@@ -33,15 +33,25 @@ defmodule Mix.Tasks.Static.Generate do
              content_path
            ]),
          {:ok, raw_content_tree} <- Jason.decode(raw_tree) do
-      raw_content_tree
-      |> read_root(params)
-      |> NestedSet.populate_lnum_rnum()
-      |> Folder.populate_breadcrumb()
-      |> NestedSet.flatten()
-      |> Enum.map(&Site.envelop/1)
-      |> IO.inspect()
-      |> Enum.map(&Site.write/1)
-      
+      sites =
+        raw_content_tree
+        |> read_root(params)
+        |> NestedSet.populate_lnum_rnum()
+        |> Folder.populate_breadcrumb()
+        |> NestedSet.flatten()
+        |> Enum.map(&Site.envelop/1)
+        |> Enum.map(&Site.write/1)
+
+      sites
+      |> Enum.map(fn %Site{url: url, lnum: lnum, rnum: rnum, breadcrumb: breadcrumb} ->
+        %{
+          url: url,
+          lnum: lnum,
+          rnum: rnum,
+          breadcrumb: breadcrumb |> Enum.map(fn %Site{url: b_url} -> b_url end)
+        }
+        |> IO.inspect()
+      end)
 
       # TODO: poupulate siblings
       # ----------------------------------
