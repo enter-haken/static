@@ -37,9 +37,7 @@ defmodule Static.Folder do
       |> Enum.map(fn site ->
         %Site{
           site
-          | breadcrumb:
-              NestedSet.breadcrumb(nested_set, site)
-              |> Enum.map(fn %Site{url: url} -> %{url: url, title: nil} end)
+          | breadcrumb: NestedSet.breadcrumb(nested_set, site)
         }
       end)
 

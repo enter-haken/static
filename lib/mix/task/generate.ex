@@ -37,6 +37,11 @@ defmodule Mix.Tasks.Static.Generate do
       |> read_root(params)
       |> NestedSet.populate_lnum_rnum()
       |> Folder.populate_breadcrumb()
+      |> NestedSet.flatten()
+      |> Enum.map(&Site.envelop/1)
+      |> IO.inspect()
+      |> Enum.map(&Site.write/1)
+      
 
       # TODO: poupulate siblings
       # ----------------------------------

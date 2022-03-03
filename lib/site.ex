@@ -8,20 +8,11 @@ defmodule Static.Site do
 
   @type t :: %Site{
           parameter: Parameter.t(),
-          breadcrumb: [
-            %{
-              href: String.t(),
-              title: String.t()
-            }
-          ],
-          siblings: [
-            %{
-              href: String.t(),
-              title: String.t()
-            }
-          ],
+          breadcrumb: [String.t()],
+          siblings: [String.t()],
           content_filename: String.t(),
           relative_content_filename: String.t(),
+          title: String.t(),
           url: String.t(),
           raw_markdown: String.t(),
           ast: term(),
@@ -33,7 +24,6 @@ defmodule Static.Site do
         }
 
   defstruct parameter: nil,
-            # TODO: works only with fully populated site
             breadcrumb: [],
 
             # TODO: works only with fully populated site
@@ -46,6 +36,7 @@ defmodule Static.Site do
             target_file: nil,
             relative_content_filename: nil,
             content_filename: nil,
+            title: nil,
             url: nil,
             lnum: nil,
             rnum: nil
@@ -57,15 +48,18 @@ defmodule Static.Site do
       relative_content_filename: file_name |> Path.relative_to(content_path)
     }
 
-    # TODO: depends on parsed markdown content (for title)
     |> set_url()
     |> set_target_file()
     |> read()
     |> ast()
+    |> title()
     |> parse()
-    |> envelop()
-    |> write()
   end
+
+  defp title(%Site{ast: [{"h1", [], [title], %{}} | _rest]} = site),
+    do: %Site{site | title: title}
+
+  defp title(site), do: site
 
   defp set_url(%Site{relative_content_filename: relative_content_filename} = site) do
     %Site{
@@ -130,15 +124,27 @@ defmodule Static.Site do
     }
   end
 
-  defp envelop(%Site{body: body, relative_content_filename: relative_content_filename} = site) do
+  def envelop(
+        %Site{
+          body: body,
+          relative_content_filename: relative_content_filename,
+          breadcrumb: breadcrumb
+        } = site
+      ) do
     %Site{
       site
       | html:
-          EEx.eval_file("lib/template/default.eex", body: body, title: relative_content_filename)
+          EEx.eval_file("lib/template/default.eex",
+            assigns: [
+              body: body,
+              title: relative_content_filename,
+              breadcrumb: breadcrumb
+            ]
+          )
     }
   end
 
-  defp write(%Site{target_file: target_file, html: html} = site) do
+  def write(%Site{target_file: target_file, html: html} = site) do
     with :ok <- target_file |> Path.dirname() |> File.mkdir_p(),
          :ok <- target_file |> File.write(html) do
       site
