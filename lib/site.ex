@@ -6,10 +6,12 @@ defmodule Static.Site do
 
   @derive Jason.Encoder
 
+  @teaser_marker {:comment, [], ["more"], %{comment: true}}
+
   @type t :: %Site{
           parameter: Parameter.t(),
-          breadcrumb: [String.t()],
-          siblings: [String.t()],
+          breadcrumb: [Site.t()],
+          siblings: [Site.t()],
           content_filename: String.t(),
           relative_content_filename: String.t(),
           title: String.t(),
@@ -18,28 +20,31 @@ defmodule Static.Site do
           ast: term(),
           body: String.t(),
           html: String.t(),
+          teaser: String.t(),
           target_file: String.t(),
           lnum: pos_integer(),
-          rnum: pos_integer()
+          rnum: pos_integer(),
+          is_active: boolean(),
+          should_generate_teasers: boolean()
         }
 
   defstruct parameter: nil,
             breadcrumb: [],
-
-            # TODO: works only with fully populated site
-            # TODO: sibling functions in folder module?
             siblings: [],
             raw_markdown: nil,
             ast: nil,
             body: nil,
             html: nil,
+            teaser: nil,
             target_file: nil,
             relative_content_filename: nil,
             content_filename: nil,
             title: nil,
             url: nil,
             lnum: nil,
-            rnum: nil
+            rnum: nil,
+            is_active: false,
+            should_generate_teasers: false
 
   def create(file_name, %Parameter{content_path: content_path} = parameter) do
     %Site{
@@ -51,8 +56,43 @@ defmodule Static.Site do
     |> set_target_file()
     |> read()
     |> ast()
+    |> teaser()
     |> title()
     |> parse()
+  end
+
+  def envelop(
+        %Site{
+          body: body,
+          relative_content_filename: relative_content_filename,
+          breadcrumb: breadcrumb,
+          siblings: siblings,
+          should_generate_teasers: should_generate_teasers
+        } = site
+      ) do
+    %Site{
+      site
+      | html:
+          EEx.eval_file("lib/template/default.eex",
+            assigns: [
+              body: body,
+              title: relative_content_filename,
+              breadcrumb: breadcrumb,
+              siblings: siblings,
+              should_generate_teasers: should_generate_teasers
+            ]
+          )
+    }
+  end
+
+  def write(%Site{target_file: target_file, html: html} = site) do
+    with :ok <- target_file |> Path.dirname() |> File.mkdir_p(),
+         :ok <- target_file |> File.write(html) do
+      site
+    else
+      err ->
+        Logger.error("could not write #{target_file}. #{inspect(err)}")
+    end
   end
 
   defp title(%Site{ast: [{"h1", [], [title], %{}} | _rest]} = site),
@@ -120,33 +160,21 @@ defmodule Static.Site do
     }
   end
 
-  def envelop(
-        %Site{
-          body: body,
-          relative_content_filename: relative_content_filename,
-          breadcrumb: breadcrumb
-        } = site
-      ) do
-    %Site{
-      site
-      | html:
-          EEx.eval_file("lib/template/default.eex",
-            assigns: [
-              body: body,
-              title: relative_content_filename,
-              breadcrumb: breadcrumb
-            ]
-          )
-    }
-  end
-
-  def write(%Site{target_file: target_file, html: html} = site) do
-    with :ok <- target_file |> Path.dirname() |> File.mkdir_p(),
-         :ok <- target_file |> File.write(html) do
-      site
+  defp teaser(%Site{ast: ast} = site) do
+    if ast |> Enum.any?(&has_teaser?/1) do
+      %Site{
+        site
+        | teaser:
+            ast
+            |> Enum.take_while(&teaser_has_not_been_reached?/1)
+            |> Earmark.Transform.transform()
+      }
     else
-      err ->
-        Logger.error("could not write #{target_file}. #{inspect(err)}")
+      site
     end
   end
+
+  defp has_teaser?(ast), do: ast == @teaser_marker
+
+  defp teaser_has_not_been_reached?(ast), do: ast != @teaser_marker
 end

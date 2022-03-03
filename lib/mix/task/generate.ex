@@ -19,7 +19,8 @@ defmodule Mix.Tasks.Static.Generate do
   def run(args) do
     %Static.Parameter{
       content_path: content_path,
-      output_path: output_path
+      output_path: output_path,
+      static_path: static_path
     } = params = Static.Parameter.get_params(args)
 
     if not File.dir?(output_path) do
@@ -39,28 +40,35 @@ defmodule Mix.Tasks.Static.Generate do
         |> NestedSet.populate_lnum_rnum()
         |> Folder.populate_breadcrumb()
         |> NestedSet.flatten()
+        |> IO.inspect()
         |> Enum.map(&Site.envelop/1)
         |> Enum.map(&Site.write/1)
 
       sites
-      |> Enum.map(fn %Site{url: url, lnum: lnum, rnum: rnum, breadcrumb: breadcrumb} ->
+      |> Enum.map(fn %Site{url: url, lnum: lnum, rnum: rnum, siblings: siblings} ->
         %{
           url: url,
           lnum: lnum,
           rnum: rnum,
-          breadcrumb: breadcrumb |> Enum.map(fn %Site{url: b_url} -> b_url end)
+          siblings:
+            siblings
+            |> Enum.map(fn %Site{url: b_url, is_active: is_active} ->
+              %{url: b_url, is_active: is_active}
+            end)
         }
         |> IO.inspect()
       end)
 
-      # TODO: poupulate siblings
+      if not is_nil(static_path) do
+        File.cp_r!(static_path, output_path)
+      end
+
       # ----------------------------------
       # when site is conpletely populated:
       # ----------------------------------
       # TODO: parse markdown
       # TODO: create default template -> Tailwind?
       # TODO: how to use custom templates?
-      # TODO: copy static content
     end
   end
 

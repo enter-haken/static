@@ -5,7 +5,7 @@ default: all
 all: clean build 
 
 build:
-	mix static.generate --content-path /tmp/content --output-path /tmp/output
+	mix static.generate --content-path /tmp/content --output-path /tmp/output --static-path /tmp/static
 
 serve:
 	python -m http.server --directory /tmp/output

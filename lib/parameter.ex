@@ -7,7 +7,7 @@ defmodule Static.Parameter do
       "content-path-cmd",
       "output-path-cmd",
       "exclude-cmd",
-      "static-cmd",
+      "static-path-cmd",
       "space"
     ]
 

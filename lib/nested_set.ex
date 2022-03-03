@@ -33,8 +33,12 @@ defmodule Static.NestedSet do
       |> Enum.filter(fn x -> Kernel.is_struct(x, Site) end)
       # Add the first site of the folder to list.
       # As for this, you have to replace the lnum and rnum values with
-      # the folder ones so breadcrumb will workd
-      |> Kernel.++([%Site{(sites |> List.first()) | lnum: lnum, rnum: rnum}])
+      # the folder ones so breadcrumb will work
+      |> Kernel.++([
+        %Site{(sites |> List.first()) | lnum: lnum, rnum: rnum, should_generate_teasers: true}
+      ])
+      # because we added the frist site with new lnum/rnum values
+      # we have to remove the "old" duplcate one
       |> List.delete_at(0)
 
     sites
@@ -46,10 +50,10 @@ defmodule Static.NestedSet do
     |> Enum.sort_by(fn %Site{lnum: lnum} -> lnum end)
   end
 
-   def flattened_tree(folder, lnum \\ 1) do
-     populate_lnum_rnum(folder, lnum)
-     |> flatten()
-   end
+  def flattened_tree(folder, lnum \\ 1) do
+    populate_lnum_rnum(folder, lnum)
+    |> flatten()
+  end
 
   def breadcrumb(sites, %Site{content_filename: content_filename}) do
     case sites
