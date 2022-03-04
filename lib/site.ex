@@ -56,6 +56,7 @@ defmodule Static.Site do
     |> set_target_file()
     |> read()
     |> ast()
+    |> rewrite_ast()
     |> teaser()
     |> title()
     |> parse()
@@ -177,4 +178,33 @@ defmodule Static.Site do
   defp has_teaser?(ast), do: ast == @teaser_marker
 
   defp teaser_has_not_been_reached?(ast), do: ast != @teaser_marker
+
+  defp rewrite_ast(%Site{ast: ast} = site) do
+    %Site{site | ast: ast |> Enum.map(&walk/1) |> Enum.filter(fn x -> not is_nil(x) end)}
+  end
+
+  defp walk(
+         {"pre", [],
+          [
+            {"code", [{"class", "{lang=dot}"}], [graphviz_content], %{}}
+          ], %{}}
+       ) do
+    {image, 0} = "echo '#{graphviz_content}' | dot -Tpng" |> bash()
+
+    {"p", [{"style", "text-align:center"}],
+     [
+       {"img", [{"src", "data:image/png;base64,#{Base.encode64(image)}"}, {"alt", "asd"}], [],
+        %{}}
+     ], %{}}
+  end
+
+  defp walk(@teaser_marker), do: @teaser_marker
+
+  defp walk({:comment, [], _comments, %{comment: true}}), do: nil
+
+  defp walk(other) do
+    other
+  end
+
+  def bash(script), do: System.cmd("sh", ["-c", script])
 end

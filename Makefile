@@ -4,6 +4,12 @@ default: all
 
 all: clean build 
 
+install:
+	mix do escript.build, escript.install --force
+
+uninstall:
+	mix escript.uninstall static
+
 build:
 	mix static.generate --content-path /tmp/content --output-path /tmp/output --static-path /tmp/static
 
@@ -19,3 +25,4 @@ copy:
 
 clean:
 	rm -rf /tmp/output/ || true
+	rm static || true
