@@ -8,6 +8,7 @@ defmodule Static.Parameter do
       "output-path-cmd",
       "exclude-cmd",
       "static-path-cmd",
+      "template-cmd",
       "space"
     ]
 
@@ -17,12 +18,14 @@ defmodule Static.Parameter do
           content_path: String.t(),
           output_path: String.t(),
           static_path: String.t(),
+          template: String.t(),
           exclude: String.t()
         }
 
   defstruct content_path: nil,
             output_path: nil,
             static_path: nil,
+            template: nil,
             exclude: nil
 
   def get_params(nil), do: []
@@ -38,13 +41,16 @@ defmodule Static.Parameter do
         |> Enum.reduce(%Parameter{}, fn found_param, acc ->
           case found_param do
             [content_path: [term: [content_path]]] ->
-              %Parameter{acc | content_path: content_path |> List.to_string()}
+              %Parameter{acc | content_path: content_path |> List.to_string() |> Path.expand()}
 
             [output_path: [term: [output_path]]] ->
-              %Parameter{acc | output_path: output_path |> List.to_string()}
+              %Parameter{acc | output_path: output_path |> List.to_string() |> Path.expand()}
 
             [static_path: [term: [static_path]]] ->
-              %Parameter{acc | static_path: static_path |> List.to_string()}
+              %Parameter{acc | static_path: static_path |> List.to_string() |> Path.expand()}
+
+            [template: [term: [template]]] ->
+              %Parameter{acc | template: template |> List.to_string() |> Path.expand()}
 
             [exclude: [term: [exclude]]] ->
               %Parameter{acc | exclude: exclude |> List.to_string()}

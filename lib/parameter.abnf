@@ -1,6 +1,6 @@
 params            = action *(*space action)
-action            = content-path / output-path / exclude / static-path
-word              = (ALPHA / DIGIT / "/") *(ALPHA / DIGIT / "-" / "_" / "." / ":" / "/")
+action            = content-path / output-path / exclude / static-path / template
+word              = (ALPHA / DIGIT / "/" / ".") *(ALPHA / DIGIT / "-" / "_" / "." / ":" / "/")
 term              = (dquote word *(*space word) dquote / word)
 content-path-cmd  = ("--content-path" / "-p")
 content-path      = content-path-cmd *space term
@@ -10,5 +10,7 @@ exclude-cmd       = ("--exclude" / "-e")
 exclude           = exclude-cmd *space term 
 static-path-cmd   = ("--static-path" / "-s")
 static-path       = static-path-cmd *space term 
+template-cmd      = ("--template" / "-t")
+template          = template-cmd *space term
 space             = " "
 dquote            = DQUOTE

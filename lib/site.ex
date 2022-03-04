@@ -64,6 +64,7 @@ defmodule Static.Site do
 
   def envelop(
         %Site{
+          parameter: %Parameter{template: template},
           body: body,
           relative_content_filename: relative_content_filename,
           breadcrumb: breadcrumb,
@@ -74,7 +75,7 @@ defmodule Static.Site do
     %Site{
       site
       | html:
-          EEx.eval_file("lib/template/default.eex",
+          EEx.eval_file(template,
             assigns: [
               body: body,
               title: relative_content_filename,

@@ -1,22 +1,16 @@
-defmodule Mix.Tasks.Static.Generate do
+defmodule Static.Generate do
   @moduledoc """
 
-  """
-  @shortdoc """
-    generates a static site
   """
 
   @tree_result_as_json_with_full_path "-Jf"
   @no_report_at_the_end_of_tree_result "--noreport"
 
-  use Mix.Task
-
   alias Static.Site
   alias Static.Folder
   alias Static.NestedSet
 
-  @impl Mix.Task
-  def run(args) do
+  def main(args) do
     %Static.Parameter{
       content_path: content_path,
       output_path: output_path,
@@ -34,41 +28,17 @@ defmodule Mix.Tasks.Static.Generate do
              content_path
            ]),
          {:ok, raw_content_tree} <- Jason.decode(raw_tree) do
-      sites =
-        raw_content_tree
-        |> read_root(params)
-        |> NestedSet.populate_lnum_rnum()
-        |> Folder.populate_breadcrumb()
-        |> NestedSet.flatten()
-        |> IO.inspect()
-        |> Enum.map(&Site.envelop/1)
-        |> Enum.map(&Site.write/1)
-
-      sites
-      |> Enum.map(fn %Site{url: url, lnum: lnum, rnum: rnum, siblings: siblings} ->
-        %{
-          url: url,
-          lnum: lnum,
-          rnum: rnum,
-          siblings:
-            siblings
-            |> Enum.map(fn %Site{url: b_url, is_active: is_active} ->
-              %{url: b_url, is_active: is_active}
-            end)
-        }
-        |> IO.inspect()
-      end)
+      raw_content_tree
+      |> read_root(params)
+      |> NestedSet.populate_lnum_rnum()
+      |> Folder.populate_breadcrumb()
+      |> NestedSet.flatten()
+      |> Enum.map(&Site.envelop/1)
+      |> Enum.map(&Site.write/1)
 
       if not is_nil(static_path) do
         File.cp_r!(static_path, output_path)
       end
-
-      # ----------------------------------
-      # when site is conpletely populated:
-      # ----------------------------------
-      # TODO: parse markdown
-      # TODO: create default template -> Tailwind?
-      # TODO: how to use custom templates?
     end
   end
 
