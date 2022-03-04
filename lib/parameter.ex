@@ -6,7 +6,6 @@ defmodule Static.Parameter do
     ignore: [
       "content-path-cmd",
       "output-path-cmd",
-      "exclude-cmd",
       "static-path-cmd",
       "template-cmd",
       "space"
@@ -18,15 +17,13 @@ defmodule Static.Parameter do
           content_path: String.t(),
           output_path: String.t(),
           static_path: String.t(),
-          template: String.t(),
-          exclude: String.t()
+          template: String.t()
         }
 
   defstruct content_path: nil,
             output_path: nil,
             static_path: nil,
-            template: nil,
-            exclude: nil
+            template: nil
 
   def get_params(nil), do: []
   def get_params([]), do: []
@@ -51,9 +48,6 @@ defmodule Static.Parameter do
 
             [template: [term: [template]]] ->
               %Parameter{acc | template: template |> List.to_string() |> Path.expand()}
-
-            [exclude: [term: [exclude]]] ->
-              %Parameter{acc | exclude: exclude |> List.to_string()}
 
             _ ->
               acc
