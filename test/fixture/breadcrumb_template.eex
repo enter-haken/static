@@ -1,2 +1,8 @@
-<%= inspect(@breadcrumb) %>
+<div>
+<%= for %{url: url, title: title} <- @breadcrumb do %>
+  <a href="<%= url %>"><%= title %></a>
+<% end %>
+</div>
+<div>
 <%= @body %>
+</div>

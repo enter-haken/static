@@ -6,6 +6,8 @@ defmodule Static.Site do
 
   @derive Jason.Encoder
 
+  @derive {Inspect, only: [:ast, :body, :breadcrumb, :lnum, :rnum, :title, :url]}
+
   @teaser_marker {:comment, [], ["more"], %{comment: true}}
 
   @type t :: %Site{
