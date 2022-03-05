@@ -25,8 +25,8 @@ defmodule Static.Parameter do
             static_path: nil,
             template: nil
 
-  def get_params(nil), do: []
-  def get_params([]), do: []
+  def get_params(nil), do: %Parameter{}
+  def get_params([]), do: %Parameter{} 
 
   def get_params(raw_params) do
     raw_params
