@@ -68,7 +68,7 @@ defmodule Static.Site do
         %Site{
           parameter: %Parameter{template: template},
           body: body,
-          relative_content_filename: relative_content_filename,
+          title: title,
           breadcrumb: breadcrumb,
           siblings: siblings,
           should_generate_teasers: should_generate_teasers
@@ -80,7 +80,7 @@ defmodule Static.Site do
           EEx.eval_file(template,
             assigns: [
               body: body,
-              title: relative_content_filename,
+              title: title,
               breadcrumb: breadcrumb,
               siblings: siblings,
               should_generate_teasers: should_generate_teasers
