@@ -1,4 +1,14 @@
 defmodule Static.Folder do
+  @moduledoc """
+  As you generate html documents from a folder structure, 
+  a `Static.Folder` structure describes a main entry point.
+
+  A `Static.Folder` can consist of
+
+  - a `Static.Site` or
+  - a `Static.Folder`
+
+  """
   alias __MODULE__
 
   alias Static.Site
@@ -19,13 +29,18 @@ defmodule Static.Folder do
             lnum: nil,
             rnum: nil
 
-  def create(parameter, sites) do
-    %Folder{
+  @doc """
+  Creates a `Static.Folder` struct for given application `Static.Parameter` and
+  a list of `Static.Site`.
+  """
+  @spec create(parameter :: Parameter.t(), sites :: [Site.t() | Folder.t()]) :: Folder.t()
+  def create(parameter, sites),
+    do: %Folder{
       parameter: parameter,
       sites: sites
     }
-  end
 
+  @spec populate_breadcrumb(Static.Folder.t()) :: Static.Folder.t()
   def populate_breadcrumb(root_folder) do
     populate_breadcrumb(root_folder, root_folder |> NestedSet.flattened_tree())
   end

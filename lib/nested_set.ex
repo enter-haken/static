@@ -1,4 +1,8 @@
 defmodule Static.NestedSet do
+  @moduledoc """
+  You can describe a tree as a `Static.NestedSet`
+
+  """
   alias Static.Folder
   alias Static.Site
 
