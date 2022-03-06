@@ -3,15 +3,18 @@ defmodule Static.Site do
 
   alias __MODULE__
   alias Static.Parameter
+  alias Static.Meta
 
   @derive Jason.Encoder
 
   @derive {Inspect, only: [:ast, :body, :breadcrumb, :lnum, :rnum, :title, :url]}
 
   @teaser_marker {:comment, [], ["more"], %{comment: true}}
+  @h_rule {"hr", [{"class", "thin"}], [], %{}}
 
   @type t :: %Site{
           parameter: Parameter.t(),
+          meta: Meta.t(),
           breadcrumb: [Site.t()],
           siblings: [Site.t()],
           content_filename: String.t(),
@@ -31,6 +34,7 @@ defmodule Static.Site do
         }
 
   defstruct parameter: nil,
+            meta: nil,
             breadcrumb: [],
             siblings: [],
             raw_markdown: nil,
@@ -59,14 +63,15 @@ defmodule Static.Site do
     |> read()
     |> ast()
     |> rewrite_ast()
+    |> meta()
     |> teaser()
-    |> title()
     |> parse()
   end
 
   def envelop(
         %Site{
           parameter: %Parameter{template: template},
+          meta: meta,
           body: body,
           title: title,
           breadcrumb: breadcrumb,
@@ -80,6 +85,7 @@ defmodule Static.Site do
           EEx.eval_file(template,
             assigns: [
               body: body,
+              meta: meta,
               title: title,
               breadcrumb: breadcrumb,
               siblings: siblings,
@@ -99,10 +105,23 @@ defmodule Static.Site do
     end
   end
 
-  defp title(%Site{ast: [{"h1", [], [title], %{}} | _rest]} = site),
+  defp meta(
+         %Site{
+           ast: [
+             @h_rule,
+             {"p", [], [meta], %{}},
+             @h_rule,
+             {"h1", [], [title], %{}} | _rest
+           ]
+         } = site
+       ) do
+    %Site{site | meta: Meta.create(meta), title: title}
+  end
+
+  defp meta(%Site{ast: [{"h1", [], [title], %{}} | _rest]} = site),
     do: %Site{site | title: title}
 
-  defp title(site), do: site
+  defp meta(site), do: site
 
   defp set_url(%Site{relative_content_filename: relative_content_filename} = site) do
     %Site{
@@ -155,7 +174,16 @@ defmodule Static.Site do
     }
   end
 
-  defp parse(%Site{ast: nil} = site), do: site
+  defp parse(
+         %Site{
+           ast: [@h_rule, _meta, @h_rule | document]
+         } = site
+       ) do
+    %Site{
+      site
+      | body: Earmark.Transform.transform(document)
+    }
+  end
 
   defp parse(%Site{ast: ast} = site) do
     %Site{
@@ -164,17 +192,21 @@ defmodule Static.Site do
     }
   end
 
+  defp teaser(%Site{ast: [@h_rule, _meta, @h_rule | rest]} = site) do
+    %Site{site | teaser: parse_ast_for_teaser(rest)}
+  end
+
   defp teaser(%Site{ast: ast} = site) do
+    %Site{site | teaser: parse_ast_for_teaser(ast)}
+  end
+
+  defp parse_ast_for_teaser(ast) do
     if ast |> Enum.any?(&has_teaser?/1) do
-      %Site{
-        site
-        | teaser:
-            ast
-            |> Enum.take_while(&teaser_has_not_been_reached?/1)
-            |> Earmark.Transform.transform()
-      }
+      ast
+      |> Enum.take_while(&teaser_has_not_been_reached?/1)
+      |> Earmark.Transform.transform()
     else
-      site
+      nil
     end
   end
 
