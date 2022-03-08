@@ -23,12 +23,29 @@ You have to provide the following parameters:
 
 `static` needs the following parameter
 
-* `--content-path` - The **root folder** of the markdown sources
-* `--output-path` - The **target folder** for the generated html files. This folder does not need to exists.
-* `--template` - An [EEx template][1] used for every site generated.
-* `--static-path` - If you have aditional content, which needs to be copied to the **output folder**,
+* `--content-path` / `-c` - - The **root folder** of the markdown sources
+* `--output-path` / `-o` - The **target folder** for the generated html files. This folder does not need to exists.
+* `--template` / `-t` - An [EEx template][1] used for every site generated.
+* `--static-path` / `-s` - If you have aditional content, which needs to be copied to the **output folder**,
 you can assign **an existing folder**.
 This parameter is **optional**.
+
+## template
+
+The given template is responsible for **all sites** generated.
+So it will basicly hold the html file.
+
+An empty template file will lead to empty html files.
+
+The smallest possible file would be:
+
+```
+<%= @body %>
+```
+
+All files will contain there parsed markown content.
+
+You can take a look at [hake.one][3] and [the template used][4] for a bigger example.
 
 ## docker
 
@@ -60,3 +77,5 @@ make down
 
 [1]: https://hexdocs.pm/eex/EEx.html
 [2]: https://hexdocs.pm/mix/main/Mix.Tasks.Escript.Build.html
+[3]: https://hake.one
+[4]: https://github.com/enter-haken/content/blob/main/template/default.eex
