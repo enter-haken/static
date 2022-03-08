@@ -1,4 +1,4 @@
-.PHONY: default loc clean install uninstall
+.PHONY: default loc clean install uninstall up down exec
 
 default: clean install 
 
@@ -13,3 +13,12 @@ loc:
 
 clean:
 	rm static || true
+
+up:
+	docker-compose up --build -d
+
+down:
+	docker-compose down
+
+exec:
+	docker exec -it static /bin/bash

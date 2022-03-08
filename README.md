@@ -5,6 +5,7 @@
 * elixir ~ 1.13
 * erlang ~ 24.2
 * tree ~ 2.0
+* graphviz ~ 2.49
 
 ## installation
 
@@ -18,28 +19,38 @@ to install the [escript][1].
 
 You have to provide the following parameters:
 
-# run
+## run
 
 `static` needs the following parameter
 
-## --content-path 
-
-The **root folder** of the markdown sources
-
-## --output-path
-
-The **target folder** for the generated html files.
-This folder does not need to exists.
-
-## --template
-
-An [EEx template][1] used for every site generated.
-
-## --static-path
-
-If you have aditional content, which needs to be copied to the **output folder**,
+* `--content-path` - The **root folder** of the markdown sources
+* `--output-path` - The **target folder** for the generated html files. This folder does not need to exists.
+* `--template` - An [EEx template][1] used for every site generated.
+* `--static-path` - If you have aditional content, which needs to be copied to the **output folder**,
 you can assign **an existing folder**.
 This parameter is **optional**.
+
+## docker
+
+There is a `Dockerfile` and a `docker-compose.yaml` file in place. 
+
+You can start a testing container with
+
+```
+$ make up
+```
+
+and exec into it with 
+
+```
+make exec
+```
+
+You can stop the container with
+
+```
+make down
+```
 
 # Contact
 

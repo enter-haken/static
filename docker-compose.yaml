@@ -1,0 +1,10 @@
+version: '3'
+
+services: 
+  static:
+    image: enter-haken/static
+    container_name: static
+    build:
+      context: . 
+    tty: true
+
