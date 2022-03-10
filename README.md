@@ -69,14 +69,14 @@ You can stop the container with
 make down
 ```
 
-# feature ideas
+## feature ideas
 
 * provide a "continue reading" link to give the next LNUM
 * Give the opportunity to read the given content on one site.
 * Provide PDF export
 * Provide rss feeds
 
-# Contact
+## Contact
 
 [hake.one](https://hake.one). Jan Frederik Hake, <jan_hake@gmx.de>. 
 [@enter_haken](https://twitter.com/enter_haken) on Twitter. 
